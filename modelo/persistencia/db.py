@@ -1,3 +1,5 @@
+import hashlib
+import os
 import sqlite3
 from pathlib import Path
 
@@ -43,8 +45,18 @@ def inicializar_bd():
 
         CREATE INDEX IF NOT EXISTS idx_sim_escenario
             ON simulaciones(escenario_id);
+
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario    TEXT NOT NULL UNIQUE,
+            nombre     TEXT NOT NULL,
+            rol        TEXT NOT NULL,
+            salt       BLOB NOT NULL,
+            clave_hash BLOB NOT NULL
+        );
         """)
         _asegurar_columnas(conn)
+        _asegurar_usuarios(conn)
 
 
 def _asegurar_columnas(conn: sqlite3.Connection):
@@ -61,4 +73,26 @@ def _asegurar_columnas(conn: sqlite3.Connection):
             conn.execute(
                 f"ALTER TABLE simulaciones ADD COLUMN {nombre} {tipo}"
             )
+
+
+def _asegurar_usuarios(conn: sqlite3.Connection):
+    """Crea las cuentas de demostración solo si la tabla está vacía."""
+    total = conn.execute("SELECT COUNT(*) AS n FROM usuarios").fetchone()["n"]
+    if total:
+        return
+    cuentas = (
+        ("analista", "Analista de operaciones", "Analista"),
+        ("supervisor", "Supervisor de sala", "Supervisor"),
+        ("admin", "Administrador del sistema", "Administrador"),
+    )
+    for usuario, nombre, rol in cuentas:
+        salt = os.urandom(16)
+        clave = hashlib.pbkdf2_hmac("sha256", b"Simop2026", salt, 120_000)
+        conn.execute(
+            """
+            INSERT INTO usuarios (usuario, nombre, rol, salt, clave_hash)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (usuario, nombre, rol, salt, clave),
+        )
         

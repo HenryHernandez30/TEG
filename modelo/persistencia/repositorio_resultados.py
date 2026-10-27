@@ -35,4 +35,35 @@ class RepositorioResultados:
 
         with get_conexion() as conn:
             return [dict(f) for f in conn.execute(query, params).fetchall()]
+
+    def eliminar_ids(self, ids: list[int]) -> int:
+        """Borra las simulaciones indicadas. Devuelve cuántas filas quitó."""
+        limpios = [int(i) for i in ids]
+        if not limpios:
+            return 0
+        marcas = ",".join("?" * len(limpios))
+        with get_conexion() as conn:
+            cur = conn.execute(
+                f"DELETE FROM simulaciones WHERE id IN ({marcas})",
+                tuple(limpios),
+            )
+            return cur.rowcount
+
+    def eliminar_anteriores(self, fecha: str) -> int:
+        """Borra simulaciones ejecutadas antes de la fecha (YYYY-MM-DD)."""
+        with get_conexion() as conn:
+            cur = conn.execute(
+                """
+                DELETE FROM simulaciones
+                WHERE date(ejecutado_en) < date(?)
+                """,
+                (fecha,),
+            )
+            return cur.rowcount
+
+    def eliminar_todos(self) -> int:
+        """Borra todo el historial de simulaciones."""
+        with get_conexion() as conn:
+            cur = conn.execute("DELETE FROM simulaciones")
+            return cur.rowcount
             
