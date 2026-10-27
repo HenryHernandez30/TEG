@@ -1,0 +1,5 @@
+# Base local. El esquema se crea al arrancar la aplicación.
+datos/*.db
+venv/
+__pycache__/
+*.py[cod]
