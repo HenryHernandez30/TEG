@@ -20,6 +20,10 @@ def _detalle_numerico():
                 st.dataframe(pd.DataFrame([comp]), width="stretch")
 
 
+def _pasar_a_reportes():
+    st.session_state["nav"] = "Reportes"
+
+
 def render():
     st.header("Atención al cliente")
     st.caption("Los clientes entran, hacen fila y pasan al primer mostrador libre.")
@@ -27,6 +31,7 @@ def render():
     config = st.session_state.get("config")
     if not config:
         st.warning("Primero configura los parámetros.")
+        _boton_siguiente()
         return
 
     if st.button("Ejecutar simulación", type="primary"):
@@ -55,3 +60,15 @@ def render():
         c3.metric("Utilización", f"{resultado['utilizacion_operadores']*100:.1f}%")
         c4.metric("Throughput", f"{resultado['throughput']:.2f}/h")
         _detalle_numerico()
+    _boton_siguiente()
+
+
+def _boton_siguiente():
+    with st.container(horizontal=True, horizontal_alignment="right"):
+        st.button(
+            "Siguiente",
+            type="primary",
+            icon=":material/arrow_forward:",
+            on_click=_pasar_a_reportes,
+            key="siguiente_simulacion",
+        )

@@ -3,6 +3,21 @@ from modelo.persistencia.repositorio_escenarios import (
     RepositorioEscenarios, Escenario
 )
 
+def _pasar_a_simulacion():
+    previo = st.session_state.get("config") or {}
+    escenario_id = None
+    if st.session_state.get("_escenario_sel") not in (None, "<Nuevo>"):
+        escenario_id = previo.get("escenario_id")
+    st.session_state["config"] = {
+        "num_operadores": int(st.session_state["cfg_n"]),
+        "tasa_llegada": float(st.session_state["cfg_lam"]),
+        "tasa_servicio": float(st.session_state["cfg_mu"]),
+        "tiempo_simulacion": float(st.session_state["cfg_T"]),
+        "escenario_id": escenario_id,
+    }
+    st.session_state["nav"] = "Simulación"
+
+
 def _asignar_campos(nombre, operadores, llegada, servicio, horizonte):
     st.session_state["cfg_nombre"] = nombre
     st.session_state["cfg_n"] = int(operadores)
@@ -74,3 +89,12 @@ def render():
                 "escenario_id": esc_id,
             }
             st.success(f"✅ Escenario '{nombre}' guardado (ID {esc_id})")
+
+    with st.container(horizontal=True, horizontal_alignment="right"):
+        st.button(
+            "Siguiente",
+            type="primary",
+            icon=":material/arrow_forward:",
+            on_click=_pasar_a_simulacion,
+            key="siguiente_config",
+        )
